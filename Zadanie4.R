@@ -45,6 +45,7 @@ library(ComplexHeatmap)
 dim(dane_myb)
 
 dane_myb_s <- log2(t(as.matrix(dane_myb[,c(2:4)])))
+dane_myb_s <- log2(t(as.matrix(dane_myb[,c(2:4)] + 1))) # zaktualizowano po komentarzu do zadania
 dane_myb_s <- t(dane_myb_s)
 row.names(dane_myb_s) <- dane_myb$GenID
 dane_myb_s1 <- na.omit(dane_myb_s)

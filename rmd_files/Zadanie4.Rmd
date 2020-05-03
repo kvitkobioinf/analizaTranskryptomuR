@@ -68,6 +68,7 @@ Wykorzystując skalowanie danych za pomocą funkcji log2()
 dim(dane_myb)
 
 dane_myb_s <- log2(t(as.matrix(dane_myb[,c(2:4)])))
+dane_myb_s <- log2(t(as.matrix(dane_myb[,c(2:4)] + 1))) # zaktualizowano po komentarzu do zadania
 dane_myb_s <- t(dane_myb_s)
 row.names(dane_myb_s) <- dane_myb$GenID
 dane_myb_s1 <- na.omit(dane_myb_s)
@@ -76,58 +77,6 @@ dane_myb_s1 <- na.omit(dane_myb_s)
 ### Utworzenie heatmapy
 ```{r, error=TRUE}
 Heatmap(dane_myb_s1, cluster_columns=FALSE,
-        row_names_side = "left",
-        row_dend_sid = "left",
-        row_names_gp=gpar(cex=0.6))
-```
-
-Komenda nie działa po zmianie skalowania danych z funkcji scale() na log2()
-
-Dla porównania - komenda ze skalowaniem funkcją scale() - jak w instrukcji do ćwiczeń
-```{r}
-dane_myb_s <- scale(t(as.matrix(dane_myb[,c(2:4)])))
-dane_myb_s <- t(dane_myb_s)
-row.names(dane_myb_s) <- dane_myb$GenID
-dane_myb_s1 <- na.omit(dane_myb_s)
-Heatmap(dane_myb_s1, cluster_columns=FALSE,
-        row_names_side = "left",
-        row_dend_sid = "left",
-        row_names_gp=gpar(cex=0.6))
-```
-
-Znaleziona na stronie pomocy Bioconductor'a informacja sugeruje, że problemem są liczby nieskończone
-[https://support.bioconductor.org/p/57354/](https://support.bioconductor.org/p/57354/)
-
-```{r, results = 'hide', warning=FALSE, message=FALSE}
-# Przywrócenie zmiennych przeskalowanych za pomocą funkcji log2() dla potrzeb dalszych działań
-dane_myb_s <- log2(t(as.matrix(dane_myb[,c(2:4)])))
-dane_myb_s <- t(dane_myb_s)
-row.names(dane_myb_s) <- dane_myb$GenID
-dane_myb_s1 <- na.omit(dane_myb_s)
-```
-
-Przetworzona tabela rzeczywiście zawiera dane nieskończone (jak zasugerowano na forum Bioconductor'a)
-```{r}
-sum(!is.finite(dane_myb_s1))
-```
-
-Spróbowano usunąć dane nieskończone
-
-```{r}
-dane_myb_s1_finite_only <- dane_myb_s1
-dim(dane_myb_s1_finite_only)
-dane_myb_s1_finite_only[!is.finite(dane_myb_s1_finite_only)] <- NA
-dane_myb_s1_finite_only <- na.omit(dane_myb_s1_finite_only)
-dim(dane_myb_s1_finite_only)
-
-sum(!is.finite(dane_myb_s1_finite_only))
-```
-
-Po pozostawieniu jedynie liczb skończonych funkcja Heatmap() działa.
-Czy taki był cel zadania? Czy heatmapa wygenerowana w oparciu o ograniczoną ilość danych jest równie wartościowa?
-
-```{r}
-Heatmap(dane_myb_s1_finite_only, cluster_columns=FALSE,
         row_names_side = "left",
         row_dend_sid = "left",
         row_names_gp=gpar(cex=0.6))
