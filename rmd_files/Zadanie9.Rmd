@@ -1,0 +1,62 @@
+---
+title: "Zadanie 9 - Analiza Differential Expression (DE)"
+author: "Ksenia Kvitko"
+date: "9 05 2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+# 1. Dane z etapu końca zadania 8
+Importowanie danych wygenerowanych przez program featureCounts na serwerze oraz normalizacja danych
+```{r, results = 'hide', warning=FALSE, message=FALSE}
+#BiocManager::install(c("DESeq2"))
+library(DESeq2)
+
+data22 <- read.csv('../source_files/counts_22.txt', sep = '\t', skip = 1)
+dataERCC92 <- read.csv('../source_files/counts_ERCC92.txt', sep = '\t', skip = 1)
+
+normalizeDDS <- function(data){
+  countData <- data[,7:12]
+  rownames(countData) = data$Geneid
+  samples <- names(countData)
+  cond_1 <- rep("cond1", 3)
+  cond_2 <- rep("cond2", 3)
+  condition <- factor(c(cond_1, cond_2))
+  colData <- data.frame(samples = samples, condition = condition)
+  dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~condition)
+  
+  return(dds)
+}
+
+dds_22 <- normalizeDDS(data22)
+dds_ERCC99 <- normalizeDDS(dataERCC92)
+```
+
+# 2. Rozwiązanie zadania
+
+### Przygotowanie funkcji generującej analizę i jej filtracja wg podanych kryteriów
+
+```{r, results = 'hide', warning=FALSE, message=FALSE}
+summarizeDDS <- function(ddsData){
+  dds <- ddsData
+  
+  dds <- DESeq(dds)
+  res <- results(dds)
+  
+  r <- res[res$baseMean != 0,] # pominięcie genów bez ekspresji (zerowej)
+  r <- r[r$log2FoldChange > 1 | r$log2FoldChange < -1,] # założenie, że istotne są geny z co najmniej dwukrotną zmianą ekspresji 2^1 lub 2^-1
+  x <- !is.na(r$padj) # usunięcie danych brakujących (NA)
+  r <- r[x,]
+  r <- r[r$padj < 0.05,] # wybór genów o istotności statystycznej < 5%
+  print(paste("Geny o istotnie statystycznie zmienionym poziomie ekspresji pomiędzy badanymi warunkami:", nrow(r), sep = " "))
+  print(r)
+}
+```
+
+### Przeprowadzenie analiz
+```{r, warning=FALSE, message=FALSE}
+summarizeDDS(dds_22)
+summarizeDDS(dds_ERCC99)
+```
