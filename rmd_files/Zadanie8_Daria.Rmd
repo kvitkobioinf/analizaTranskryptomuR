@@ -3,9 +3,9 @@ title: "Zadanie 8 - Heatmapa z clastrowaniem genów i próbek dla genów"
 author: "Ksenia Kvitko"
 date: "9 05 2020"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 # 1. Importowanie danych wygenerowanych przez program featureCounts na serwerze

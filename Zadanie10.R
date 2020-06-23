@@ -39,17 +39,17 @@ GO.wall1.MF <- GO.wall.MF[GO.wall.MF$category%in%enriched.GO,]
 GO.wall1.MF$FDR <- p.adjust(GO.wall.MF$over_represented_pvalue,method = "BH")[p.adjust(GO.wall.MF$over_represented_pvalue,method = "BH") < .05]
 GO.wall1.MF <- GO.wall1.MF[!is.na(GO.wall1.MF$FDR),]
 GO.wall.BP <- GO.wall[GO.wall$ontology == 'BP',]
-enriched.GO <- GO.wall.BP$category[p.adjust(GO.wall.BP$over_represented_pvalue,method="BH")<.05]
+enriched.GO <- GO.wall.BP$category[p.adjust(GO.wall.BP$over_represented_pvalue, method = "BH")<.05]
 GO.wall1.BP <- GO.wall.BP[GO.wall.BP$category%in%enriched.GO,]
 GO.wall1.BP$FDR <- p.adjust(GO.wall.BP$over_represented_pvalue,method="BH")[p.adjust(GO.wall.BP$over_represented_pvalue,method = "BH") < .05]
 GO.wall1.BP <- GO.wall1.BP[!is.na(GO.wall1.BP$FDR),]
 polaczone <- rbind(GO.wall1.BP, GO.wall1.MF, GO.wall1.CC)
 
 row.names(r) <- de.gene
-r <- cbind(rownames(r), data.frame(r, row.names=NULL))
+r <- cbind(rownames(r), data.frame(r, row.names = NULL))
 colnames(r) <- c('loc','logFC','logCPM','PValue','FDR')
-genes_ <- data.frame(unlist(geneID2GO, use.names=TRUE))
-geneid <- cbind(rownames(genes_), data.frame(genes_, row.names=NULL))
+genes_ <- data.frame(unlist(geneID2GO, use.names = TRUE))
+geneid <- cbind(rownames(genes_), data.frame(genes_, row.names = NULL))
 colnames(geneid) <- c('loc','GO')
 geneid$loc <- substr(geneid$loc,1,11)
 geneMerged <- merge(r,geneid)
@@ -58,7 +58,7 @@ geneMerged <- na.omit(geneMerged)
 polaczone$plus <- 0
 polaczone$minus <- 0
 for (m in 1:length(geneMerged$logFC)){
-  if (geneMerged$logFC[m] > 0){
+  if (geneMerged$logFC[m] > 0) {
     for (n in 1:length(polaczone$category)){
       if (polaczone$category[n] == geneMerged$GO[m]){
         polaczone$plus[n] <- polaczone$plus[n] + 1
@@ -74,22 +74,24 @@ for (m in 1:length(geneMerged$logFC)){
 }
 
 plotData <- data.frame(polaczone$category, polaczone$ontology, polaczone$plus, polaczone$minus)
-colnames(plotData) <- c("category","ontology","UP","DOWN")
+colnames(plotData) <- c("category","ontology","Up","Down")
 plotData$DGEs_Number <- 0
 plotData <- rbind(plotData,plotData)
 plotData$DGE <- ''
 for (s in 1:(length(plotData$category)/2)){
   plotData[s,5] <- plotData[s,3]
-  plotData[s,6] <- "UP"
-  s = s+length(plotData$category)/2
+  plotData[s,6] <- "Up"
+  s <- s+length(plotData$category)/2
   plotData[s,5] <- plotData[s,4]
-  plotData[s,6] <- "DOWN"
+  plotData[s,6] <- "Down"
 }
 
-ggplot(data = plotData, aes(x=category, y=DGEs_Number, fill=DGE)) +
-  geom_bar(stat="identity", position=position_dodge())+
+ggplot(data = plotData, aes(x = category, y = DGEs_Number, fill = DGE)) +
+  geom_bar(stat="identity", position=position_dodge()) +
   coord_flip() +
-  theme_minimal()+
-  scale_fill_manual("legend", values = c("UP" = "red", "DOWN" = "blue"))+
-  geom_text(aes(label=DGEs_Number), position=position_dodge(width=0.1), size =2)+
+  theme_minimal() +
+  scale_fill_manual("", values = c("Up" = "red", "Down" = "blue")) +
+  ylab("DGEs Number") +
+  xlab("Category") +
+  geom_text(aes(label = DGEs_Number), position=position_dodge(width=0.1), size = 2) +
   facet_grid(ontology ~ ., scales = "free")
