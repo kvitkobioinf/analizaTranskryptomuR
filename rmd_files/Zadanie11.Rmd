@@ -1,9 +1,34 @@
-library(DESeq2)
+---
+title: "Zadanie 11 - ocena poprawności analiz (kontrola jakości, mapowanie, DE)"
+author: "Ksenia Kvitko"
+date: "25 06 2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
 
+# 1. Ładowaniebiblioteki
+```{r, results = 'hide', warning=FALSE, message=FALSE}
+library(DESeq2)
+```
+
+# 2. Wczytanie odczytów zmapowanych danych
+```{r, results = 'hide', warning=FALSE, message=FALSE}
 dataERCC92 <- read.delim("~/cwiczenia/zad11/counts_ERCC92.txt", comment.char = "#")
 data22 <- read.delim("~/cwiczenia/zad11/counts_22.txt", comment.char = "#")
-dataProvided <- read.delim("~/cwiczenia/zad11/cms_095046.txt", comment.char = "#")
+```
 
+## Oraz danych dostarczonych
+```{r, results = 'hide', warning=FALSE, message=FALSE}
+dataProvided <- read.delim("~/cwiczenia/zad11/cms_095046.txt", comment.char = "#")
+```
+
+# 3. Rozwiązanie zadania
+
+## 3.1 Normalizacja danych
+
+```{r, results = 'hide', warning=FALSE, message=FALSE}
 normalizeDDS <- function(data){
   countData <- data[,7:12]
   rownames(countData) <- data$Geneid
@@ -17,7 +42,13 @@ normalizeDDS <- function(data){
   return(dds)
 }
 
-analyseDESeq <- function(Data, ymin, ymax){
+normalizedERCC92 <- normalizeDDS(dataERCC92)
+normalized22 <- normalizeDDS(data22)
+```
+
+## 3.2 Analiza DE
+```{r, warning=FALSE, message=FALSE}
+analyseDE <- function(Data, ymin, ymax){
   dds <- DESeq(Data)
   res <- results(dds)
   
@@ -31,12 +62,12 @@ analyseDESeq <- function(Data, ymin, ymax){
   return(resSig)
 }
 
-normalizedERCC92 <- normalizeDDS(dataERCC92)
-normalized22 <- normalizeDDS(data22)
+dddERCC92 <- analyseDE(normalizedERCC92, -4, 4)
+ddd22 <- analyseDE(normalized22, -10, 10)
+```
 
-dddERCC92 <- analyseDESeq(normalizedERCC92, -4, 4)
-ddd22 <- analyseDESeq(normalized22, -10, 10)
-
+## 3.3 Ocena korelacji (poprawności analizy)
+```{r, results = 'hide', warning=FALSE, message=FALSE}
 dddERCC92 <- cbind(rownames(dddERCC92), data.frame(dddERCC92, row.names=NULL))
 colnames(dddERCC92) <- c("ERCC.ID", "baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj")
 
@@ -50,6 +81,12 @@ rownames(compare) <- compare$ERCC.ID
 Test.corr <- merge(Test.corr, compare, by=0, all=TRUE)
 Test.corr <- na.omit(Test.corr)
 rownames(Test.corr) <- Test.corr$Row.names
+```
 
+### 3.3.1 Test korelacji Pearsona
+```{r, warning=FALSE, message=FALSE}
 corRes <- cor.test(Test.corr$log2, Test.corr$log2FoldChange,method = "pearson", )
-print(corRes)
+corRes
+```
+
+Niskie prawdopodobieństwo (p-value << 0.05) oraz wysoka wartość współczynnika koralacji (cor > 0.98) sugerują poprawne przeprowadzenie analiz.
